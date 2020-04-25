@@ -1,7 +1,10 @@
 FROM ubuntu:latest
 
+ENV TZ=Europe/Moscow
+
 # installation of necessary components for nginx
-RUN apt-get update \
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+&& apt-get update \
 && apt-get install build-essential libpcre++-dev libssl-dev -y \
 && apt-get install wget -y \
 && apt-get install zlibc zlib1g zlib1g-dev -y \
@@ -44,6 +47,7 @@ RUN cd /usr/local/src \
 --with-http_random_index_module \
 --with-http_gunzip_module \
 --with-threads \
+--with-http_stub_status_module \
 && make \
 && make install \
 && nginx -V
@@ -57,25 +61,13 @@ RUN useradd -s /usr/sbin/nologin nginx \
 && mkdir /etc/nginx/common/ \
 && ln -s /usr/sbin/nginx /bin/nginx
 
-# nginx.service setup
-RUN echo "" > /lib/systemd/system/nginx.service \
-&& echo "[Unit]" >> /lib/systemd/system/nginx.service \
-&& echo "Description=A high performance web server and a reverse proxy server" >> /lib/systemd/system/nginx.service \
-&& echo "After=network.target" >> /lib/systemd/system/nginx.service \
-&& echo "" >> /lib/systemd/system/nginx.service \
-&& echo "[Service]" >> /lib/systemd/system/nginx.service \
-&& echo "Type=forking" >> /lib/systemd/system/nginx.service \
-&& echo "PIDFile=/var/run/nginx.pid" >> /lib/systemd/system/nginx.service \
-&& echo "ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'" >> /lib/systemd/system/nginx.service \
-&& echo "ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'" >> /lib/systemd/system/nginx.service \
-&& echo "ExecReload=/usr/sbin/nginx -g 'daemon on; master_process on;' -s reload" >> /lib/systemd/system/nginx.service \
-&& echo "ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /var/run/nginx.pid" >> /lib/systemd/system/nginx.service \
-&& echo "TimeoutStopSec=5" >> /lib/systemd/system/nginx.service \
-&& echo "KillMode=mixed" >> /lib/systemd/system/nginx.service \
-&& echo "" >> /lib/systemd/system/nginx.service \
-&& echo "[Install]" >> /lib/systemd/system/nginx.service \
-&& echo "WantedBy=multi-user.target" >> /lib/systemd/system/nginx.service \
-&& cat /lib/systemd/system/nginx.service
+# nginx.service and nginx.conf setup
+RUN cd /usr/local/src \
+&& wget https://gitlab.com/frost.dat/welltory_nginx_test_task/-/archive/master/welltory_nginx_test_task-master.tar.gz \
+&& tar -zxvf welltory_nginx_test_task-master.tar.gz \
+&& cd welltory_nginx_test_task-master \
+&& cp nginx.service /lib/systemd/system/ \
+&& cp nginx.conf /etc/nginx/
 
 CMD ["nginx", "-g", "daemon off;"]
 
