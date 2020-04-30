@@ -34,3 +34,8 @@ nginx configurate: add
 ```
 --with-http_stub_status_module
 ```
+ ### v1.2
+ nginx configurate: default
+  
+update <code>Dockerfile</code>
+
