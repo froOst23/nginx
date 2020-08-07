@@ -1,4 +1,4 @@
-# welltory_nginx_test_task
+# Welltory nginx test task
 
 ![](https://img.shields.io/docker/stars/froost23/jenkins-with-python-3.7.svg)
 ![](https://img.shields.io/docker/pulls/froost23/jenkins-with-python-3.7.svg)
